@@ -5,6 +5,7 @@ Used by `python -m src.main --run-simulation` (demo + reference log) and the E2E
 
 from __future__ import annotations
 
+import asyncio
 import itertools
 import tempfile
 import uuid
@@ -29,6 +30,9 @@ from src.utils.logging import bind_context, bind_trace_id, clear_context, get_lo
 from src.utils.pii import mask_text
 
 log = get_logger(__name__)
+
+_RECOVERY_CYCLES = 8  # P(all probes fail at 30% chaos) ≈ 0.3**8 < 0.01%
+_DEMO_BREAKER_RECOVERY_S = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,7 +126,13 @@ class SimulationRunner:
             self._transport or httpx.AsyncHTTPTransport(), scenario.quote_failures
         )
         sender = SimulatedWhatsAppSender()
-        container = build_container(self._settings, outbound=sender, quote_transport=transport)
+        settings = self._settings
+        if scenario.run_requote_worker:
+            # Compress the breaker's recovery window so the demo does not wait 30 s.
+            settings = settings.model_copy(
+                update={"breaker_recovery_timeout_s": _DEMO_BREAKER_RECOVERY_S}
+            )
+        container = build_container(settings, outbound=sender, quote_transport=transport)
         try:
             if self._create_tables:
                 await create_schema(container.engine)
@@ -162,8 +172,7 @@ class SimulationRunner:
 
         if scenario.run_requote_worker and result.conversation_id:
             transport.remaining_failures = 0  # the legacy API "comes back"
-            recovered = await container.worker.run_once()
-            log.info("simulation_requote_worker_ran", recovered=recovered)
+            recovered = await self._run_worker_until_recovered(container)
             replies = sender.sent_to(contact)[-2:] if recovered else []
             result.turns.append(
                 Turn("(background re-quote after the API recovered)", replies, None)
@@ -178,6 +187,22 @@ class SimulationRunner:
             failures=result.failures,
         )
         return result
+
+    async def _run_worker_until_recovered(self, container: Container) -> int:
+        """Background worker cycles, as in production, after the outage ends.
+
+        The outage left the breaker one failure away from opening, and the legacy service
+        still fails ~30% of calls at random, so a single cycle can legitimately trip the
+        breaker. Like the real worker, keep cycling: each cycle after the (shortened)
+        recovery window is a half-open probe."""
+        recovered = 0
+        for cycle in range(1, _RECOVERY_CYCLES + 1):
+            recovered = await container.worker.run_once()
+            log.info("simulation_requote_worker_ran", cycle=cycle, recovered=recovered)
+            if recovered:
+                break
+            await asyncio.sleep(container.settings.breaker_recovery_timeout_s)
+        return recovered
 
     async def _collect_audit(self, container: Container, result: ScenarioResult) -> None:
         if result.conversation_id is None:

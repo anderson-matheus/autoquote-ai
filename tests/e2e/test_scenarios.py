@@ -72,3 +72,33 @@ async def test_rerunning_against_the_same_database_starts_fresh(
     assert first.passed
     assert second.passed
     assert first.conversation_id != second.conversation_id
+
+
+class _ScriptedRng:
+    """Replaces the legacy service's RNG: the first /quote roll fails, the rest succeed."""
+
+    def __init__(self) -> None:
+        self.rolls = [0.0]
+
+    def random(self) -> float:
+        return self.rolls.pop(0) if self.rolls else 0.99
+
+    def choice(self, options: list[str]) -> str:
+        return options[0]
+
+
+async def test_recovery_survives_breaker_opening_after_outage(
+    settings: Settings,
+    legacy_app: object,
+    legacy_transport: httpx.ASGITransport,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """4 injected failures + 1 real chaos failure = breaker opens during recovery.
+    The worker keeps cycling and the half-open probe delivers the quote."""
+    monkeypatch.setattr(legacy_app, "FAILURE_RATE", 0.2)
+    monkeypatch.setattr(legacy_app, "_rng", _ScriptedRng())
+    scenario = next(s for s in SCENARIOS if s.name == "quote_api_outage_then_recovery")
+    runner = SimulationRunner(settings, legacy_transport, create_tables=True, run_tag="")
+    result = await runner.run(scenario)
+    assert result.passed, render_transcript([result])
+    assert result.quote_statuses == ["unavailable", "unavailable", "success"]
