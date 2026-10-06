@@ -1,0 +1,166 @@
+=== [FAIL] happy_path ===
+Lead gives data across messages (with unsolicited CPF/e-mail), picks a plan, accepts.
+
+  lead  > Oi, queria fazer um seguro pro meu carro
+  agent < Olá! Sou o assistente virtual da AutoSeguro 🚗 Vou fazer sua cotação rapidinho.
+  agent < Pra calcular certinho, me passa o *modelo e ano* do carro, a *idade* do principal condutor, o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > e um Corolla 2022
+  agent < Pra calcular certinho, me passa a *idade* do principal condutor, o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > Tenho 35 anos, cep 01310-***, cpf [CPF]
+  agent < Pra calcular certinho, me passa a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > meu email é [EMAIL] e o whats é esse mesmo [PHONE]
+  agent < Pra calcular certinho, me passa a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > quero que comece dia 15
+  agent < Tenho estes planos pra você:
+          1. *Essencial* — cobre colisão, roubo e furto; franquia R$ 4.500,00
+          2. *Completo* — cobre colisão, roubo, furto, danos a terceiros e vidros; franquia R$ 3.000,00
+          3. *Premium* — cobre colisão, roubo, furto, danos a terceiros, vidros, carro reserva e assistência 24h; franquia R$ 1.500,00
+          Qual deles você quer cotar?
+          [state: plan_selection]
+  lead  > completo
+  agent < Perfeito, estou calculando sua cotação…
+  agent < Só um instante, o sistema de cotação está um pouco lento…
+  agent < Nosso sistema de cotação está instável agora e eu não quero te passar um valor errado. Já deixei seus dados com um consultor, que vai te mandar a cotação por aqui. Se o sistema voltar antes, eu mesmo te envio.
+          [state: handoff]
+  lead  > fechado!
+  agent < Seu atendimento já está com um consultor, ele te responde por aqui em breve.
+          [state: handoff]
+  final_state=handoff handoffs=[('quote_unavailable', 'open')] quotes=['unavailable']
+  !! handoff 'plan_accepted' not opened (['quote_unavailable'])
+  !! quoted expected True (['unavailable'])
+
+=== [PASS] piecemeal_with_media_and_invalid_data ===
+Media message, invalid CEP, then corrections; ends with the quote presented.
+
+  lead  > boa tarde, quero uma cotacao
+  agent < Olá! Sou o assistente virtual da AutoSeguro 🚗 Vou fazer sua cotação rapidinho.
+  agent < Pra calcular certinho, me passa o *modelo e ano* do carro, a *idade* do principal condutor, o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > [documento] CNH_frente.pdf
+  agent < Ainda não consigo abrir anexos ou áudios por aqui. Pode me mandar por texto?
+  agent < Pra calcular certinho, me passa o *modelo e ano* do carro, a *idade* do principal condutor, o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > Onix Plus, ano 2019
+  agent < Pra calcular certinho, me passa a *idade* do principal condutor, o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > tenho 28 anos
+  agent < Pra calcular certinho, me passa o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > cep 0131
+  agent < Hmm, CEP deve ter 8 dígitos. Pode conferir?
+  agent < Pra calcular certinho, me passa o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > desculpa, o cep é 01310-***
+  agent < Pra calcular certinho, me passa a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > a partir do proximo mes
+  agent < Tenho estes planos pra você:
+          1. *Essencial* — cobre colisão, roubo e furto; franquia R$ 4.500,00
+          2. *Completo* — cobre colisão, roubo, furto, danos a terceiros e vidros; franquia R$ 3.000,00
+          3. *Premium* — cobre colisão, roubo, furto, danos a terceiros, vidros, carro reserva e assistência 24h; franquia R$ 1.500,00
+          Qual deles você quer cotar?
+          [state: plan_selection]
+  lead  > premium
+  agent < Perfeito, estou calculando sua cotação…
+  agent < Sua cotação do plano *Premium* ficou em *R$ 488,61/mês*.
+          • Coberturas: colisão, roubo, furto, danos a terceiros, vidros, carro reserva e assistência 24h
+          • Franquia: R$ 1.500,00
+          • Carência: roubo e furto passam a valer 30 dias após o início da vigência
+          Quer contratar? Também posso cotar outro plano ou te passar pra um consultor.
+          [state: presenting]
+  final_state=presenting handoffs=[] quotes=['success']
+
+=== [PASS] vehicle_too_old ===
+Underwriting rule (vehicle > 20 years) caught before calling the API.
+
+  lead  > ola, quanto fica o seguro?
+  agent < Olá! Sou o assistente virtual da AutoSeguro 🚗 Vou fazer sua cotação rapidinho.
+  agent < Pra calcular certinho, me passa o *modelo e ano* do carro, a *idade* do principal condutor, o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > Gol 2001
+  agent < Infelizmente não consigo cotar automaticamente nesse caso (Veiculo com mais de 20 anos nao e aceito). Passei seu atendimento pra um consultor avaliar as alternativas com você.
+          [state: handoff]
+  final_state=handoff handoffs=[('underwriting_refusal', 'open')] quotes=[]
+
+=== [PASS] objection_then_negotiation ===
+Price objection -> cheaper plan offered and quoted -> second objection -> human.
+
+  lead  > eae, to querendo segurar meu carro
+  agent < Olá! Sou o assistente virtual da AutoSeguro 🚗 Vou fazer sua cotação rapidinho.
+  agent < Pra calcular certinho, me passa o *modelo e ano* do carro, a *idade* do principal condutor, o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > HB20 2021, tenho 45 anos, cep 08010-***, pode comecar hoje
+  agent < Tenho estes planos pra você:
+          1. *Essencial* — cobre colisão, roubo e furto; franquia R$ 4.500,00
+          2. *Completo* — cobre colisão, roubo, furto, danos a terceiros e vidros; franquia R$ 3.000,00
+          3. *Premium* — cobre colisão, roubo, furto, danos a terceiros, vidros, carro reserva e assistência 24h; franquia R$ 1.500,00
+          Qual deles você quer cotar?
+          [state: plan_selection]
+  lead  > premium
+  agent < Perfeito, estou calculando sua cotação…
+  agent < Só um instante, o sistema de cotação está um pouco lento…
+  agent < Sua cotação do plano *Premium* ficou em *R$ 441,87/mês*.
+          • Coberturas: colisão, roubo, furto, danos a terceiros, vidros, carro reserva e assistência 24h
+          • Franquia: R$ 1.500,00
+          • Carência: roubo e furto passam a valer 30 dias após o início da vigência
+          • Como a vigência começa no meio do mês, o 1º pagamento é proporcional: R$ 370,60 (26 de 31 dias). Depois, R$ 441,87/mês.
+          Quer contratar? Também posso cotar outro plano ou te passar pra um consultor.
+          [state: presenting]
+  lead  > achei caro pra esse carro
+  agent < Entendo! Uma opção mais em conta é o *Completo* (cobre colisão, roubo, furto, danos a terceiros e vidros, franquia R$ 3.000,00). Quer que eu cote ele?
+          [state: presenting]
+  lead  > pode ser
+  agent < Certo, vou recalcular com essa informação…
+  agent < Sua cotação do plano *Completo* ficou em *R$ 272,87/mês*.
+          • Coberturas: colisão, roubo, furto, danos a terceiros e vidros
+          • Franquia: R$ 3.000,00
+          • Carência: roubo e furto passam a valer 30 dias após o início da vigência
+          • Como a vigência começa no meio do mês, o 1º pagamento é proporcional: R$ 228,86 (26 de 31 dias). Depois, R$ 272,87/mês.
+          Quer contratar? Também posso cotar outro plano ou te passar pra um consultor.
+          [state: presenting]
+  lead  > ainda ta salgado, a Porto Seguro me ofereceu menos
+  agent < Entendo! Vou chamar um consultor que pode avaliar condições especiais pra você.
+          [state: handoff]
+  final_state=handoff handoffs=[('negotiation', 'open')] quotes=['success', 'success']
+
+=== [PASS] asks_for_human ===
+Explicit request for a person at any point is honoured immediately.
+
+  lead  > Oi
+  agent < Olá! Sou o assistente virtual da AutoSeguro 🚗 Vou fazer sua cotação rapidinho.
+  agent < Pra calcular certinho, me passa o *modelo e ano* do carro, a *idade* do principal condutor, o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > prefiro falar com um atendente
+  agent < Claro! Já chamei um consultor, ele continua seu atendimento por aqui em instantes.
+          [state: handoff]
+  final_state=handoff handoffs=[('customer_request', 'open')] quotes=[]
+
+=== [FAIL] quote_api_outage_then_recovery ===
+/quote fails on every attempt (injected 503s) -> no invented price, handoff with reason quote_unavailable; the background worker retries once the API recovers and delivers the quote automatically, closing the handoff ticket.
+
+  lead  > Boa tarde, quero uma cotacao
+  agent < Olá! Sou o assistente virtual da AutoSeguro 🚗 Vou fazer sua cotação rapidinho.
+  agent < Pra calcular certinho, me passa o *modelo e ano* do carro, a *idade* do principal condutor, o *CEP* onde o carro passa a noite e a partir de *quando* quer o seguro valendo (ex.: hoje, dia 15, 01/11)?
+          [state: collecting]
+  lead  > Toyota Yaris 2020, tenho 52 anos, CEP 30140-***, começar amanhã
+  agent < Tenho estes planos pra você:
+          1. *Essencial* — cobre colisão, roubo e furto; franquia R$ 4.500,00
+          2. *Completo* — cobre colisão, roubo, furto, danos a terceiros e vidros; franquia R$ 3.000,00
+          3. *Premium* — cobre colisão, roubo, furto, danos a terceiros, vidros, carro reserva e assistência 24h; franquia R$ 1.500,00
+          Qual deles você quer cotar?
+          [state: plan_selection]
+  lead  > essencial
+  agent < Perfeito, estou calculando sua cotação…
+  agent < Só um instante, o sistema de cotação está um pouco lento…
+  agent < Nosso sistema de cotação está instável agora e eu não quero te passar um valor errado. Já deixei seus dados com um consultor, que vai te mandar a cotação por aqui. Se o sistema voltar antes, eu mesmo te envio.
+          [state: handoff]
+  lead  > (background re-quote after the API recovered)
+  final_state=handoff handoffs=[('quote_unavailable', 'open')] quotes=['unavailable', 'unavailable']
+  !! final_state='handoff', expected 'presenting'
+  !! quoted expected True (['unavailable', 'unavailable'])
+
+4/6 scenarios passed
