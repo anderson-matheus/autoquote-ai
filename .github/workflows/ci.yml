@@ -25,6 +25,7 @@ jobs:
       - run: uv sync --frozen --all-groups
       - run: make lint
       - run: make type
+      - run: make arch
       - run: make security
 
   secrets:
@@ -71,6 +72,28 @@ jobs:
         with:
           name: coverage
           path: coverage.xml
+
+  image-scan:
+    name: Container image scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --target runtime -t autoquote-ai:${{ github.sha }} .
+      - name: Trivy (fail on fixable HIGH/CRITICAL in OS packages and Python deps)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: autoquote-ai:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+      - name: Trivy misconfiguration scan (Dockerfiles, compose)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
 
   stack:
     name: Docker stack smoke test
