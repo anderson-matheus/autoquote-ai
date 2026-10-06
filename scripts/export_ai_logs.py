@@ -25,6 +25,9 @@ _SECRETS = re.compile(
     r"AIza[0-9A-Za-z_-]{30,}|"
     r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----)"
 )
+# Partial addresses ("user@company", no TLD) slip past e-mail masking, e.g. inside a grep
+# pattern typed during the session. Full addresses are handled by mask_text.
+_PARTIAL_EMAIL = re.compile(r"(?<![\w.+-])[\w.+-]+@[A-Za-z][\w-]*(?![\w.-]*\.[A-Za-z]{2,})")
 _BEARER = re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{12,}")
 _ASSIGNED = re.compile(
     r"(?i)\b((?:LLM_API_KEY|PII_ENCRYPTION_KEY|ADMIN_API_KEY|WHATSAPP_ACCESS_TOKEN|"
@@ -36,7 +39,8 @@ def sanitize_text(text: str) -> str:
     text = _SECRETS.sub("[SECRET]", text)
     text = _BEARER.sub(r"\1[SECRET]", text)
     text = _ASSIGNED.sub(r"\1[SECRET]", text)
-    return mask_text(text)
+    text = mask_text(text)
+    return _PARTIAL_EMAIL.sub("[EMAIL]", text)
 
 
 def sanitize(value: Any) -> Any:

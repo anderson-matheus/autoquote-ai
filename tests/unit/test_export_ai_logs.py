@@ -39,3 +39,11 @@ def test_export_keeps_valid_json(tmp_path: Path) -> None:
     lines = [json.loads(line) for line in out.read_text().splitlines()]
     assert lines[0] == {"ts": 1760000000, "msg": "cpf [CPF]", "name": "Bash"}
     assert "unparseable_line" in lines[1]
+
+
+def test_partial_email_addresses_are_redacted() -> None:
+    local, company = "dev.person", "example-corp"
+    out = sanitize_text(f'grep -E "{local}@{company}" file; mail {local}@{company}.ai')
+    assert company not in out
+    assert out == 'grep -E "[EMAIL]" file; mail [EMAIL]'
+    assert sanitize_text("@dataclass and user@ alone") == "@dataclass and user@ alone"
