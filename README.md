@@ -132,7 +132,7 @@ curl -s -X POST 'localhost:8080/webhooks/whatsapp?sync=true' -H 'content-type: a
 
 ```bash
 make install          # uv sync --all-groups + pre-commit hooks (Python 3.12, uv)
-make check            # every CI gate: ruff, format, mypy --strict, bandit, pip-audit, tests + coverage ≥ 85%
+make check            # every CI gate: ruff, format, mypy --strict, import contracts, bandit, pip-audit, tests + coverage ≥ 85%
 make test-fast        # unit tests only (< 2 s)
 make simulate-local   # scenarios with SQLite against QUOTE_SERVICE_URL
 make dataset && make eval   # download the dataset and score the extractor on it
@@ -142,7 +142,11 @@ make dataset && make eval   # download the dataset and score the extractor on it
 |---|---|---|
 | Lint + format | ruff (incl. bandit rules `S`, pylint `PL`, bugbear `B`) | pre-commit, CI |
 | Types | mypy `--strict` (src + scripts) | pre-commit, CI |
+| Architecture | import-linter contracts: pure domain, application layer depends only on ports, adapters never import the application | CI, `make arch` |
 | Security | bandit, pip-audit (known CVEs), gitleaks (secrets) | CI (gitleaks also in pre-commit) |
+| Image | Trivy: production image (fixable HIGH/CRITICAL) + Dockerfile misconfigurations | CI, `make scan` |
+| Dependencies | Dependabot weekly (uv, Docker base images, GitHub Actions), grouped | GitHub |
+| Branch policy | `main` is protected: PR required, all CI checks must pass, linear history, no force push | GitHub |
 | Tests | 220+ tests: unit, integration (real PostgreSQL via `TEST_DATABASE_URL` or testcontainers), contract, E2E | CI, `make test` |
 | Coverage | branch coverage, `fail_under = 85` (currently ~95%) | CI |
 | Warnings | `filterwarnings = error` | pytest |
