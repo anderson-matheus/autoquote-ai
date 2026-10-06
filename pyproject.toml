@@ -33,6 +33,7 @@ dev = [
     "bandit>=1.7",
     "pip-audit>=2.7",
     "pre-commit>=3.8",
+    "import-linter>=2.15",
 ]
 eval = ["polars>=1.5"]
 
@@ -106,3 +107,41 @@ exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "\\.\\.\\.$"]
 exclude_dirs = ["tests", "quote-service", ".venv"]
 # B104: the agent binds 0.0.0.0 on purpose; it only runs inside its container network.
 skips = ["B104"]
+
+# ---------------------------------------------------------------- architecture contracts
+# Enforced in CI (`make arch`): the hexagonal boundaries described in the README.
+[tool.importlinter]
+root_package = "src"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Domain is pure: no application code, adapters or I/O frameworks"
+type = "forbidden"
+source_modules = ["src.domain"]
+forbidden_modules = [
+    "src.agent", "src.tools", "src.llm", "src.channels", "src.infra", "src.api",
+    "src.simulation", "src.bootstrap", "src.main",
+    "httpx", "sqlalchemy", "fastapi", "starlette", "structlog",
+]
+
+[[tool.importlinter.contracts]]
+name = "Agent (application layer) depends on ports, never on concrete adapters"
+type = "forbidden"
+source_modules = ["src.agent"]
+forbidden_modules = [
+    "src.infra", "src.api", "src.channels", "src.simulation", "src.bootstrap", "src.main",
+    "httpx", "sqlalchemy", "fastapi", "starlette",
+]
+
+[[tool.importlinter.contracts]]
+name = "Outbound adapters do not depend on the application or delivery layers"
+type = "forbidden"
+source_modules = ["src.tools", "src.llm", "src.infra"]
+forbidden_modules = ["src.agent", "src.api", "src.channels", "src.simulation", "src.bootstrap", "src.main"]
+
+[[tool.importlinter.contracts]]
+name = "Only the composition root and entry points wire adapters together"
+type = "forbidden"
+source_modules = ["src.api.routes", "src.channels"]
+forbidden_modules = ["src.infra.db.session", "src.llm.openai_compat", "src.tools.http_client"]
+allow_indirect_imports = true  # routes may see the Container type via the composition root
