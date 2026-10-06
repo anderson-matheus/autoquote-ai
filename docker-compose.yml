@@ -1,0 +1,56 @@
+name: autoquote-ai
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: autoquote
+      POSTGRES_PASSWORD: autoquote
+      POSTGRES_DB: autoquote
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoquote -d autoquote"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Legacy quote service, vendored from the challenge repo. Instability is ON by design.
+  quote-service:
+    build: ./quote-service
+    ports:
+      - "${QUOTE_SERVICE_PORT:-8000}:8000"
+    environment:
+      QUOTE_FAILURE_RATE: ${QUOTE_FAILURE_RATE:-0.20}
+      QUOTE_SLOW_RATE: ${QUOTE_SLOW_RATE:-0.10}
+      QUOTE_SLOW_SECONDS: ${QUOTE_SLOW_SECONDS:-8}
+      QUOTE_SEED: ${QUOTE_SEED:-}
+    restart: unless-stopped
+
+  agent:
+    build:
+      context: .
+      target: dev
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://autoquote:autoquote@postgres:5432/autoquote
+      TEST_DATABASE_URL: postgresql+asyncpg://autoquote:autoquote@postgres:5432/autoquote_test
+      QUOTE_SERVICE_URL: ${QUOTE_SERVICE_URL:-http://quote-service:8000}
+    ports:
+      - "${AGENT_PORT:-8080}:8080"
+    volumes:
+      - ./logs:/app/logs
+    # Write logs/ as the host user (see Makefile: AGENT_UID=$(id -u)).
+    user: "${AGENT_UID:-1000}:${AGENT_GID:-1000}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      quote-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
