@@ -25,3 +25,5 @@ tempting to "fix" it: remove the chaos, rename fields, add idempotency keys.
   241.39) are documented by the tests rather than hidden.
 - Upgrading to a new version of the legacy API means re-vendoring and letting the contract
   tests show what changed.
+- Dependabot does not update `quote-service/`. Its dependencies change only when it is
+  re-vendored.

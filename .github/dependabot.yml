@@ -1,4 +1,6 @@
 # Weekly dependency updates, grouped to keep PR noise low. Every PR runs the full CI.
+# The vendored legacy service (quote-service/) is deliberately excluded: it is kept
+# identical to the challenge's original (ADR 0008).
 version: 2
 updates:
   - package-ecosystem: uv
@@ -9,12 +11,8 @@ updates:
         update-types: [minor, patch]
     open-pull-requests-limit: 5
 
-  - package-ecosystem: uv
-    directory: /quote-service
-    schedule: {interval: monthly}
-
   - package-ecosystem: docker
-    directories: [/, /quote-service]
+    directory: /
     schedule: {interval: weekly}
 
   - package-ecosystem: github-actions

@@ -79,7 +79,8 @@ flowchart LR
 - `main` is **protected**: changes go through a pull request; all 5 checks are required
   and the branch must be up to date; history is linear (rebase merges); force pushes
   and deletion are blocked; admins are included.
-- **Dependabot** opens weekly grouped updates for uv (the app and the legacy service),
+- **Dependabot** opens weekly grouped updates for uv (the agent only; the vendored legacy
+  service is excluded on purpose, see [ADR 0008](adr/0008-vendor-legacy-service-unchanged.md)),
   Docker base images and GitHub Actions. Each update goes through the same gates.
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/).
 
