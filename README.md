@@ -39,6 +39,10 @@ Built for the Namastex FDE challenge
              └───────────────────────┘                            └─────────────────────────────┘
 ```
 
+> 📚 **Full documentation:** [`docs/`](docs/README.md): architecture, conversation flow,
+> resilience, data model & privacy, observability, testing & quality, operations,
+> development guide and ADRs.
+
 ---
 
 ## Quick start (Docker, end to end)
@@ -294,6 +298,8 @@ the leads are Brazilian. Code, logs and docs are English. The legacy API's field
 | [0004](docs/adr/0004-resilience-policy.md) | Retry/timeout/breaker numbers for the legacy API |
 | [0005](docs/adr/0005-data-minimisation.md) | Data minimisation, masking, encryption at rest |
 | [0006](docs/adr/0006-async-webhook.md) | Fast webhook ack, processing after the response |
+| [0007](docs/adr/0007-quality-gates-and-architecture-enforcement.md) | Automated quality gates and enforced architecture boundaries |
+| [0008](docs/adr/0008-vendor-legacy-service-unchanged.md) | Vendor the legacy quote service unchanged, test it as a contract |
 
 ## Known limitations and next steps
 - **Durable queue** between the webhook and the orchestrator (in-process background tasks

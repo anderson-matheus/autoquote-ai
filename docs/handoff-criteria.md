@@ -1,5 +1,7 @@
 # Handoff criteria
 
+> Part of the [documentation](README.md). See also [Conversation flow](conversation-flow.md).
+
 The agent does the repetitive, deterministic part of the sale: it collects data, quotes
 and explains the quote. It hands off whenever going on would need judgement, negotiation
 or authority, or would risk a wrong answer such as an invented price.
