@@ -118,6 +118,14 @@ curl -s -X POST 'localhost:8080/webhooks/whatsapp?sync=true' -H 'content-type: a
 | [`logs/reference/execution.log`](logs/reference/execution.log) | The JSON audit log of that run |
 | [`logs/reference/high-chaos-transcript.txt`](logs/reference/high-chaos-transcript.txt) + [`.log`](logs/reference/high-chaos-execution.log) | 30% 5xx + 40% slow: timeouts, circuit opens, handoff `quote_unavailable`, **no invented price** |
 
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `Bind for 0.0.0.0:8000 failed: port is already allocated` | Choose other host ports: `QUOTE_SERVICE_PORT=28000 AGENT_PORT=28080 make up` (then use those ports in the `curl` commands) |
+| Image build fails with `Temporary failure in name resolution` (common with IPv6-only DNS resolvers) | Build on the host network: `DOCKER_BUILD_NETWORK=host make up` |
+| `Permission denied: logs/execution.log` warning | Start with `make up` (it exports `AGENT_UID`/`AGENT_GID`), or `AGENT_UID=$(id -u) docker compose up -d` |
+
 ---
 
 ## Local development
