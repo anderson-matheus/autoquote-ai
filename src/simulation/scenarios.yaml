@@ -1,0 +1,96 @@
+# Scripted conversations used by `python -m src.main --run-simulation` and by the E2E tests.
+# Lead messages are pt-BR on purpose (real leads are Brazilian). All personal data below is
+# fictitious and exists to prove it never reaches logs or the database unmasked.
+
+- name: happy_path
+  description: Lead gives data across messages (with unsolicited CPF/e-mail), picks a plan, accepts.
+  contact: "5511900000001"
+  contact_name: Ursula Souza
+  messages:
+    - Oi, queria fazer um seguro pro meu carro
+    - e um Corolla 2022
+    - Tenho 35 anos, cep 01310-100, cpf 389.083.863-43
+    - meu email é ursula.souza@gmail.com e o whats é esse mesmo +55 21 97224-2584
+    - quero que comece dia 15
+    - completo
+    - fechado!
+  expect:
+    final_state: handoff
+    handoff_reason: plan_accepted
+    quoted: true
+
+- name: piecemeal_with_media_and_invalid_data
+  description: Media message, invalid CEP, then corrections; ends with the quote presented.
+  contact: "5511900000002"
+  contact_name: Bruno Lima
+  messages:
+    - boa tarde, quero uma cotacao
+    - type: document
+      text: "[documento] CNH_frente.pdf"
+    - Onix Plus, ano 2019
+    - tenho 28 anos
+    - cep 0131
+    - desculpa, o cep é 01310-100
+    - a partir do proximo mes
+    - premium
+  expect:
+    final_state: presenting
+    quoted: true
+
+- name: vehicle_too_old
+  description: Underwriting rule (vehicle > 20 years) caught before calling the API.
+  contact: "5511900000003"
+  contact_name: Carla Dias
+  messages:
+    - ola, quanto fica o seguro?
+    - Gol 2001
+  expect:
+    final_state: handoff
+    handoff_reason: underwriting_refusal
+    quoted: false
+
+- name: objection_then_negotiation
+  description: Price objection -> cheaper plan offered and quoted -> second objection -> human.
+  contact: "5511900000004"
+  contact_name: Diego Alves
+  messages:
+    - eae, to querendo segurar meu carro
+    - HB20 2021, tenho 45 anos, cep 08010-000, pode comecar hoje
+    - premium
+    - achei caro pra esse carro
+    - pode ser
+    - ainda ta salgado, a Porto Seguro me ofereceu menos
+  expect:
+    final_state: handoff
+    handoff_reason: negotiation
+    quoted: true
+
+- name: asks_for_human
+  description: Explicit request for a person at any point is honoured immediately.
+  contact: "5511900000005"
+  contact_name: Eduarda Rocha
+  messages:
+    - Oi
+    - prefiro falar com um atendente
+  expect:
+    final_state: handoff
+    handoff_reason: customer_request
+    quoted: false
+
+- name: quote_api_outage_then_recovery
+  description: >
+    /quote fails on every attempt (injected 503s) -> no invented price, handoff with
+    reason quote_unavailable; the background worker retries once the API recovers and
+    delivers the quote automatically, closing the handoff ticket.
+  contact: "5511900000006"
+  contact_name: Felipe Costa
+  faults:
+    quote_failures: 4
+  run_requote_worker: true
+  messages:
+    - Boa tarde, quero uma cotacao
+    - Toyota Yaris 2020, tenho 52 anos, CEP 30140-071, começar amanhã
+    - essencial
+  expect:
+    final_state: presenting
+    quoted: true
