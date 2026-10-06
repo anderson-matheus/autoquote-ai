@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Dataset (synthetic but PII-shaped: never committed, fetched by scripts/fetch_dataset.py)
+dataset/*.parquet
+dataset/*.jsonl
+
+# Runtime logs (the curated reference run lives in logs/reference/)
+logs/*.log*
+!logs/reference/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
