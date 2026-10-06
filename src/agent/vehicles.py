@@ -1,0 +1,68 @@
+"""Known car makes/models in the Brazilian market, for deterministic recognition."""
+
+from __future__ import annotations
+
+MODELS_BY_MAKE: dict[str, tuple[str, ...]] = {
+    "Volkswagen": (
+        "Gol",
+        "Polo",
+        "Virtus",
+        "T-Cross",
+        "Nivus",
+        "Fox",
+        "Up",
+        "Voyage",
+        "Saveiro",
+        "Jetta",
+        "Taos",
+        "Amarok",
+        "Fusca",
+        "Golf",
+    ),
+    "Chevrolet": (
+        "Onix Plus",
+        "Onix",
+        "Tracker",
+        "Spin",
+        "Prisma",
+        "Cruze",
+        "S10",
+        "Montana",
+        "Celta",
+        "Corsa",
+        "Cobalt",
+        "Equinox",
+    ),
+    "Fiat": (
+        "Argo",
+        "Mobi",
+        "Cronos",
+        "Pulse",
+        "Toro",
+        "Strada",
+        "Uno",
+        "Palio",
+        "Siena",
+        "Fastback",
+        "Fiorino",
+        "Doblo",
+    ),
+    "Hyundai": ("HB20S", "HB20", "Creta", "Tucson", "i30"),
+    "Toyota": ("Corolla Cross", "Corolla", "Yaris", "Etios", "Hilux", "SW4", "RAV4"),
+    "Honda": ("Civic", "City", "HR-V", "WR-V", "Fit", "CR-V"),
+    "Jeep": ("Renegade", "Compass", "Commander"),
+    "Renault": ("Kwid", "Sandero", "Duster", "Logan", "Captur", "Oroch", "Stepway"),
+    "Nissan": ("Kicks", "Versa", "March", "Sentra", "Frontier"),
+    "Ford": ("Ka", "Fiesta", "EcoSport", "Focus", "Ranger", "Territory"),
+    "Peugeot": ("208", "2008", "3008"),
+    "Citroen": ("C3", "C4 Cactus"),
+    "Mitsubishi": ("L200", "Outlander", "ASX", "Pajero"),
+    "BYD": ("Dolphin", "Song", "Seal"),
+}
+
+MAKE_ALIASES: dict[str, str] = {
+    "vw": "Volkswagen",
+    "volks": "Volkswagen",
+    "gm": "Chevrolet",
+    "chevy": "Chevrolet",
+}
