@@ -28,6 +28,16 @@ lint: ## Ruff lint + format check
 type: ## mypy --strict
 	$(UV) run mypy
 
+.PHONY: arch
+arch: ## Architecture contracts (import-linter): hexagonal boundaries
+	$(UV) run lint-imports
+
+.PHONY: scan
+scan: ## Trivy scan of the production image (fixable HIGH/CRITICAL)
+	docker build -q --target runtime -t autoquote-ai:scan . >/dev/null
+	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0 \
+		image --quiet --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 autoquote-ai:scan
+
 .PHONY: security
 security: ## bandit (SAST) + pip-audit (known CVEs in dependencies)
 	$(UV) run bandit -q -c pyproject.toml -r src scripts
@@ -48,7 +58,7 @@ migrations-check: ## Alembic: models and migrations are in sync (needs DATABASE_
 	$(UV) run alembic check
 
 .PHONY: check
-check: lint type security test ## Every quality gate
+check: lint type arch security test ## Every quality gate (plus `make scan` for the image)
 
 .PHONY: up
 up: ## Build and start the full stack (postgres, quote-service, agent)
