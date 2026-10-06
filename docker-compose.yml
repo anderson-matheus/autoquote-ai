@@ -18,7 +18,10 @@ services:
 
   # Legacy quote service, vendored from the challenge repo. Instability is ON by design.
   quote-service:
-    build: ./quote-service
+    build:
+      context: ./quote-service
+      # Set DOCKER_BUILD_NETWORK=host if image builds cannot resolve DNS (e.g. IPv6-only resolvers).
+      network: ${DOCKER_BUILD_NETWORK:-default}
     ports:
       - "${QUOTE_SERVICE_PORT:-8000}:8000"
     environment:
@@ -32,6 +35,7 @@ services:
     build:
       context: .
       target: dev
+      network: ${DOCKER_BUILD_NETWORK:-default}
     env_file:
       - path: .env
         required: false
