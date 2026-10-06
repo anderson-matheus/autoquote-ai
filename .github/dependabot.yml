@@ -1,0 +1,25 @@
+# Weekly dependency updates, grouped to keep PR noise low. Every PR runs the full CI.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule: {interval: weekly}
+    groups:
+      python-minor-and-patch:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: uv
+    directory: /quote-service
+    schedule: {interval: monthly}
+
+  - package-ecosystem: docker
+    directories: [/, /quote-service]
+    schedule: {interval: weekly}
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly}
+    groups:
+      actions:
+        patterns: ["*"]
