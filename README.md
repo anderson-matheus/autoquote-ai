@@ -48,7 +48,7 @@ Built for the Namastex FDE challenge
 ### 1. Environment
 
 ```bash
-git clone https://github.com/<you>/autoquote-ai.git && cd autoquote-ai
+git clone https://github.com/anderson-matheus/autoquote-ai.git && cd autoquote-ai
 cp .env.example .env
 ```
 
